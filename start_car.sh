@@ -21,13 +21,16 @@ set -x -e
 roscd f1tenth_course
 
 # Run VESC driver 
-./bin/vesc_driver > /dev/null &
+#./bin/vesc_driver > /dev/null &
 
 # Run the joystick driver
-./bin/joystick --idx 1 > /dev/null &
+#./bin/joystick --idx 1 > /dev/null &
 
 # Hokuyo Lidar
-roslaunch src/hokuyo/launch/hokuyo_10lx.launch  > /dev/null &
+#roslaunch src/hokuyo/launch/hokuyo_10lx.launch  > /dev/null &
+
+# YDLIDAR Lidar
+roslaunch ydlidar_ros X4.launch > /dev/null &
 
 # Run Websocket server.
 ./bin/websocket > /dev/null &
