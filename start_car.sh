@@ -30,7 +30,7 @@ roscd f1tenth_course
 #roslaunch src/hokuyo/launch/hokuyo_10lx.launch  > /dev/null &
 
 # YDLIDAR Lidar
-roslaunch ydlidar_ros X4.launch > /dev/null &
+roslaunch src/ydlidar/launch/X4.launch &
 
 # Run Websocket server.
 ./bin/websocket > /dev/null &

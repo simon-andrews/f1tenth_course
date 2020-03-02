@@ -14,7 +14,7 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-SET(CMAKE_CXX_FLAGS "-std=c++11 -march=native -Werror -Wall -g -rdynamic")
+SET(CMAKE_CXX_FLAGS "-std=c++11 -march=native -Wextra -Wall -g -rdynamic")
 
 IF(${CMAKE_BUILD_TYPE} MATCHES "Release")
   MESSAGE(STATUS "Additional Flags for Release mode")
@@ -98,3 +98,25 @@ TARGET_LINK_LIBRARIES(websocket
     Qt5::Widgets
     Qt5::WebSockets
     ${libs} ${OPENGL_LIBRARY} GL)
+
+SET(SDK_PATH "src/ydlidar/sdk")
+
+FILE(GLOB SDK_SRC
+  "${SDK_PATH}/src/impl/unix/*.cpp"
+  "${SDK_PATH}/src/*.cpp"
+  "${SDK_PATH}/src/*.c")
+
+INCLUDE_DIRECTORIES(
+  src/ydlidar/src
+  src/ydlidar/sdk/include
+  src/ydlidar/sdk/src)
+
+ROSBUILD_ADD_EXECUTABLE(ydlidar_node
+  src/ydlidar/src/ydlidar_node.cpp
+  ${SDK_SRC})
+TARGET_LINK_LIBRARIES(ydlidar_node ${libs})
+
+ROSBUILD_ADD_EXECUTABLE(ydlidar_client
+  src/ydlidar/src/ydlidar_client.cpp
+  ${SDK_SRC})
+TARGET_LINK_LIBRARIES(ydlidar_client ${libs})
