@@ -10,6 +10,9 @@ all: build build/CMakeLists.txt.copy
 	$(info Build_type is [${build_type}])
 	$(MAKE) --no-print-directory -C build
 
+vesc_driver:
+	$(MAKE) vesc_driver --no-print-directory -C build
+
 clean:
 	rm -rf bin lib msg_gen src/f1tenth_simulator
 
@@ -25,4 +28,3 @@ cleanup_cache:
 
 purge: clean cleanup_cache
 	rm -rf src/f1tenth_course
-

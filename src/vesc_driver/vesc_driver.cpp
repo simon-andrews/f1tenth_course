@@ -16,7 +16,7 @@
 #include "config_reader/config_reader.h"
 #include "shared/math/math_util.h"
 
-static const bool kDebug = false;
+static const bool kDebug = true;
 static const float kCommandRate = 20;
 static const float kCommandInterval = 1.0 / kCommandRate;
 
@@ -138,15 +138,21 @@ VescDriver::VescDriver(ros::NodeHandle nh,
 void VescDriver::checkCommandTimeout() {
   static const double kTimeout = 0.5;
   const double t_now = ros::WallTime::now().toSec();
-  if ((t_now > t_last_command_ + kTimeout && drive_mode_ == kAutonomousDrive) ||
-      t_now > t_last_joystick_ + kTimeout) {
+
+  ROS_WARN("t_now: %f, t_last_command_: %f, kTimeout: %f", t_now, t_last_command_.load(), kTimeout);
+
+  ROS_WARN("%d", (t_now > t_last_command_ + kTimeout && drive_mode_ == kAutonomousDrive));
+  ROS_WARN("%d", t_now > t_last_joystick_ + kTimeout);
+  if ((t_now > t_last_command_ + kTimeout && drive_mode_ == kAutonomousDrive)) {
+      //t_now > t_last_joystick_ + kTimeout) {
+    ROS_WARN("Resetting");
     mux_drive_speed_ = 0;
     mux_steering_angle_ = 0;
   }
 }
 
 void VescDriver::joystickCallback(const sensor_msgs::Joy& msg) {
-  static const bool kDebug = false;
+  //static const bool kDebug = false;
   static const float kMaxTurnRate = 0.25;
   static const float kTurboSpeed = 2.0;
   static const float kNormalSpeed = 1.0;
@@ -216,7 +222,7 @@ float Clip(float x, float x_min, float x_max, const char* name) {
 }
 
 void VescDriver::sendDriveCommands() {
-  static const bool kDebug = false;
+  //static const bool kDebug = false;
   static const float kMaxAcceleration = 4.0; // m/s^2
   static const float kMaxDeceleration = 6.0; // m/s^2
   static float last_speed_ = 0;
@@ -242,11 +248,13 @@ void VescDriver::sendDriveCommands() {
   const float servo = steering_to_servo_gain_ * mux_steering_angle_ +
       steering_to_servo_offset_;
 
+  ROS_INFO("Setting speed to %f", erpm);
   // Set speed command.
   const float erpm_clipped = Clip(erpm, -erpm_speed_limit_, erpm_speed_limit_, "erpm");
   vesc_.setSpeed(erpm_clipped);
   // vesc_.setSpeed(0);
 
+  ROS_INFO("Setting servo to %f", servo);
   // Set servo position command.
   vesc_.setServo(Clip(servo, servo_min_, servo_max_, "servo"));
   last_steering_angle_ = mux_steering_angle_;
@@ -406,9 +414,10 @@ float VescDriver::CalculateSteeringAngle(float lin_vel, float rot_vel) {
   return steering_angle;
 }
 
-void VescDriver::ackermannCurvatureCallback(
-    const f1tenth_course::AckermannCurvatureDriveMsg& cmd) {
+void VescDriver::ackermannCurvatureCallback(const f1tenth_course::AckermannCurvatureDriveMsg& cmd) {
+  ROS_INFO("Ackermann drive command received, vel: %f, curve: %f", cmd.velocity, cmd.curvature);
   t_last_command_ = ros::WallTime::now().toSec();
+  drive_mode_ = kAutonomousDrive;
   if (drive_mode_ == kAutonomousDrive) {
     mux_drive_speed_ = cmd.velocity;
     const float rot_vel = cmd.velocity * cmd.curvature;
